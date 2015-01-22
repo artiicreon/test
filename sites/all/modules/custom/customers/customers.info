@@ -1,0 +1,5 @@
+name = Customers
+description = Custom blocks for customers and partners.
+package = Icreon
+core = 7.x
+version = VERSION

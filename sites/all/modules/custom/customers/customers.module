@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * @file
+ * Provides custom blocks.
+ */
+
+/**
+ * Implement hook_block_info().
+ *
+ * Define all blocks provided by the module..
+ *
+ * @return array
+ */
+
+
+function customers_block_info() {
+  $blocks = array();  
+  $blocks['featured_resource_customer'] = array(
+    'info' => t('Featured Resource Customer Detail'),
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implement hook_block_view().
+ * Return a rendered or renderable view of a block.
+ *
+ */
+function customers_block_view($delta) {
+  $block = array();
+  switch ($delta) {
+    case 'featured_resource_customer':
+      $block['subject'] = '';
+      $block['content'] = featured_resource_customer_detail();
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_theme().
+ * Theming of block content
+ */
+function customers_theme() {
+  $template_path = drupal_get_path('module', 'customers') . '/templates';
+  $theme_hooks = array(    
+    'featured_resource_customer_detail' => array(
+      'path' => $template_path,
+      'template' => 'featured_resource_customer_detail',
+      'variables' => array('title' => NULL),
+    ),    
+  );
+  
+  return $theme_hooks;
+}
+
+/**
+ * Function to fetch slider content.
+ */
+function featured_resource_customer_detail() {  
+  drupal_add_js(drupal_get_path('module', 'customers') . '/js/customers.js');  
+  $output = 'hello';
+  $items = array();    
+  $sql_query = "SELECT node.title AS node_title, node.nid AS nid, node.created AS node_created, 'node' AS field_data_field_image_node_entity_type, 'node' AS field_data_body_node_entity_type, 'node' AS field_data_field_logo_image_node_entity_type
+FROM 
+{node} node
+WHERE (( (node.status = '1') AND (node.type IN  ('news_and_events')) ))
+ORDER BY node_created DESC";
+  
+  $results = db_query($sql_query)->fetchAll();      
+  if (count($results)) {
+    foreach ($results as $result) {      
+      $items[] = array(
+        "nid" => $result->nid,        
+        "title" => $result->node_title,
+        "created" => $result->node_created,
+        "news_image" => $result->field_data_field_image_node_entity_type,
+        "body" => $result->field_data_body_node_entity_type,
+        "news_logo" => $result->field_data_field_logo_image_node_entity_type,
+      );
+    }        
+//    $output = theme('featured_resource_customer_detail', array('title' => $result->node_title));    
+  }
+  drupal_add_js(array('customers' => array('nid' => $result->nid)), 'setting');
+//  $query = db_query("select node.nid,title,field_team_member_nid,body_value from {node} 
+//			left join {field_data_field_team_member} fdftm on fdftm.entity_id = node.nid
+//			left join {field_data_body} b on b.entity_id = node.nid 
+//			where node.type = :type and node.status=:status and fdftm.entity_id <> $nid and field_team_member_nid = :mem_nid
+//			order by node.created desc limit 3", array(':mem_nid' => $mem_nid, ':type' => 'blog', ':status' => 1))->fetchAll();
+//  if (count($query) > 0) {
+//    foreach ($query as $data) {
+//      $title = !empty($data->title) ? $data->title : '';
+//      $desc = !empty($data->body_value) ? general_truncate_teaser($data->body_value, $length = 100, $ending = '', $exact = FALSE, $considerhtml = TRUE) : '';
+//      $items[] = array('url' => 'node/' . $data->nid, 'title' => $title, 'desc' => $desc,
+//        'read_more' => l(t('Read more'), 'node/' . $data->nid, array('attributes' => array('class' => array('active')))),
+//      );
+//    }
+//  }
+//  
+//  if (count($items) > 0) {
+//    $output = theme('related_blog', array('items' => $items));
+//  }
+  return $output;
+}
